@@ -1,6 +1,10 @@
 # great_expectations_lambda
 Minimal deployment of Great Expectations on lambda
 
+Managing python dependencies in AWS lambda can be very painful. As of this writing (February 2020), lambda has a 250MB limit for layers. Since the numpy, scipy, and pandas alone are well over 200MB, deploying `great_expectations` on lambda takes some ingenuity.
+
+This guide shows how to manage dependencies for deploying `great_expectations` on AWS lambda. It doesn't (yet) actually execute anything in `great_expectations`. That part is up to you.
+
 
 ## Architecture
 
@@ -105,3 +109,14 @@ If not everything is working, you will most likely see :
 If this happens, you should probably start by using CloudWatch logs to debug.
 
 Note: the first time your lambda runs, it will pause for a couple seconds to load ge_deps.zip from S3.
+
+## What does it do?
+
+Nothing, actually. This lambda loads `great_expectations`, but doesn't actually execute anything. That part is us to you.
+
+## Contributions welcome!
+
+Ideas
+
+* Reproducible steps for creating `ge_deps.zip`
+* Actually do something with Great Expectations. :)
