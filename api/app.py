@@ -1,12 +1,35 @@
+import os
+import sys
 from chalice import Chalice
-import great_expectations
+import boto3
 
 app = Chalice(app_name='api')
 
+BUCKET_NAME = f"{os.getenv('BUCKET_NAME')}"
+s3 = boto3.resource('s3')
+bucket = s3.Bucket(BUCKET_NAME)
 
 @app.route('/')
 def index():
-    return {'hello': 'world'}
+    execute_idempotent_side_load()
+
+    import great_expectations
+
+    return {'great_expectations': 'is loaded!'}
+
+def execute_idempotent_side_load():
+    if not os.path.exists('/tmp/ge_deps.zip'):
+        # get deps zip from s3
+        bucket.download_file('ge_deps.zip', '/tmp/ge_deps.zip')
+
+        # unzip deps
+        import zipfile
+        with zipfile.ZipFile('/tmp/ge_deps.zip', 'r') as zip_ref:
+            zip_ref.extractall('/tmp')
+
+        # add to module path
+        sys.path.insert(0, '/tmp/deps')
+        print('deps loaded to tmp')
 
 
 # The view function above will return {"hello": "world"}

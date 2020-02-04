@@ -3,7 +3,7 @@ variable "default_aws_region" {
 }
 
 variable "my_bucket" {
-  default = "my-temp-bucket-3856195394"
+  default = "{{{YOUR BUCKET NAME GOES HERE}}}"
 }
 
 variable "my_layer_file" {

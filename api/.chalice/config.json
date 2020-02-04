@@ -6,7 +6,13 @@
       "api_gateway_stage": "api"
     }
   },
+  "lambda_timeout": 600,
+  "lambda_memory_size": 1024,
   "layers": [
-    "arn:aws:lambda:us-east-2:722967755147:layer:great_expectations:6"
-  ]
+    "{{{REPLACE THIS WITH THE LAMBDA LAYER ARN RETURNED BY TERRAFORM}}}"
+  ],
+  "environment_variables": {
+    "BUCKET_NAME": "{{{REPLACE THIS WITH YOUR BUCKET NAME}}}",
+    "GE_HOME": "/tmp/ge"
+  }
 }
