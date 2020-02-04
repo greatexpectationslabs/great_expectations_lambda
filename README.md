@@ -43,6 +43,8 @@ See terraform's docs (https://www.terraform.io/docs/state/remote.html) for more 
 
 5. Create terraform-managed resources
 
+In `terraform/variables.tf`, replace `{{{YOUR BUCKET NAME GOES HERE}}}` with the name of a new S3 bucket to create. This bucket will be used to load additional dependencies into lambda.
+
 ```
 terraform plan
 terraform apply
@@ -56,13 +58,20 @@ These additional dependencies would exceed lambda's 250MB limit for layers. To g
 
 6. Prepare the side load in S3.
 
-This is the one stage of the setup that I haven't yet made fully reproducible. ge_deps.zip contains the
+NOTE: There is the one stage of the setup that I haven't yet made fully reproducible: building ge_deps.zip. For now, you can just use my pre-built zip. If you're the enterprising type, you can inspect its contents and rebuild it yourself. IIR, you need to do it within an EC2 or docker instance with the same operating system that lambda runs on.
 
+ge_deps.zip contains the libraries for the side load. You will need to (1) upload it to your s3 bucket and (2) make it public, so that lambda can access it. You can do both from the AWS console or using the cli:
 
+`aws s3 cp ge_deps.zip s3://your-bucket-name/ --acl public-read`
 
-5. Update [chalice config](api/.chalice/config.json), if needed
+7. Update [chalice config](api/.chalice/config.json).
 
-6. Deploy chalice
+There are two places to update:
+
+* `{{{REPLACE THIS WITH THE LAMBDA LAYER ARN RETURNED BY TERRAFORM}}}`
+* `{{{REPLACE THIS WITH YOUR BUCKET NAME}}}`
+
+8. Deploy chalice
 
 ```
 cd api
@@ -70,3 +79,29 @@ chalice deploy
 ```
 
 By default, this will deploy to the dev stage. The deploy will create lambdas, the API gateway resources, and a Cloudfront distribution.
+
+The output should look something like this:
+```
+$ chalice deploy
+Creating deployment package.
+Updating policy for IAM role: api-dev
+Updating lambda function: api-dev
+Updating rest API
+Resources deployed:
+  - Lambda ARN: arn:aws:lambda:us-east-2:726754635241:function:api-dev
+  - Rest API URL: https://jvw99y5fbp.execute-api.us-east-2.amazonaws.com/api/
+```
+
+9. Test it with curl:
+
+`curl https://jvw99y5fbp.execute-api.us-east-2.amazonaws.com/api/`
+
+If everything is working, your lambda should return:
+`{"great_expectations":"is loaded!"}`
+
+If not everything is working, you will most likely see :
+`{"Code":"InternalServerError","Message":"An internal server error occurred."}`
+
+If this happens, you should probably start by using CloudWatch logs to debug.
+
+Note: the first time your lambda runs, it will pause for a couple seconds to load ge_deps.zip from S3.
